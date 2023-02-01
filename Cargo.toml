@@ -6,5 +6,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-actix-web = "4"
+dotenv = { version = "0" }
+log = {version = "0" }
+env_logger = { version = "0" }
+actix-web = { version = "4" }
 serde = { version = "1", features = ["derive"] }
+# diesel = { version = "2", features = ["mysql", "r2d2"] }
+sea-orm = { version = "0", features = ["sqlx-mysql", "runtime-actix-native-tls", "macros"] }
+async-trait = "0"
+
