@@ -1,26 +1,27 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{middleware, web::Data, App, HttpServer};
+use sea_orm::Database;
+use user::UserContainer;
+pub mod user;
 
-#[get("/")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
-}
-
-#[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
-}
-
-async fn manual_hello() -> impl Responder {
-    HttpResponse::Ok().body("Hey there!")
-}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| {
+    dotenv::dotenv().ok();
+    env_logger::init_from_env(env_logger::Env::new().default_filter_or("debug"));
+
+    // set up database connection pool
+    let conn_spec = std::env::var("DATABASE_URL").expect("DATABASE_URL");
+    let db = Database::connect(conn_spec)
+        .await
+        .expect("Can't connect to db.");
+
+    let user_container = UserContainer::new_user_container(db.clone());
+
+    HttpServer::new(move || {
         App::new()
-            .service(hello)
-            .service(echo)
-            .route("/hey", web::get().to(manual_hello))
+            .app_data(Data::new(user_container.clone()))
+            .wrap(middleware::Logger::default())
+            .configure(user::config)
     })
     .bind(("127.0.0.1", 8081))?
     .run()
