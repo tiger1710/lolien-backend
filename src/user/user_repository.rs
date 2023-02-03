@@ -1,8 +1,7 @@
-use super::user_domain::Entity as User;
-use crate::user::Model;
+use super::user_domain::{ActiveModel, Entity, Model};
 use async_trait::async_trait;
 
-use sea_orm::{DatabaseConnection, DbErr, EntityTrait};
+use sea_orm::{ActiveModelTrait, ActiveValue::NotSet, DatabaseConnection, DbErr, EntityTrait, Set};
 
 pub struct UserRepositoryImpl {
     conn: DatabaseConnection,
@@ -17,6 +16,15 @@ impl UserRepositoryImpl {
 #[async_trait]
 impl super::UserRepository for UserRepositoryImpl {
     async fn select_user_by_id(&self, uid: i32) -> Result<Option<Model>, DbErr> {
-        Ok(User::find_by_id(uid).one(&self.conn).await?)
+        Ok(Entity::find_by_id(uid).one(&self.conn).await?)
+    }
+
+    async fn insert_user(&self, user: Model) -> Result<ActiveModel, DbErr> {
+        Ok(ActiveModel {
+            id: NotSet,
+            name: Set(user.name.to_owned()),
+        }
+        .save(&self.conn)
+        .await?)
     }
 }

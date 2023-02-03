@@ -3,7 +3,6 @@ use sea_orm::Database;
 use user::UserContainer;
 pub mod user;
 
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
