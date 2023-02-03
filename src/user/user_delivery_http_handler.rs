@@ -1,31 +1,50 @@
 use std::sync::Arc;
 
-use async_trait::async_trait;
+use actix_web::{get, post, web, Error, HttpResponse};
 
-use actix_web::{error::ErrorNotFound, Error, HttpResponse};
+use crate::user::UserContainer;
 
-use super::UserUsecase;
+use super::{user_domain::Model, UserUsecase};
 
-pub struct UserHttpHandlerImpl {
+#[derive(Clone)]
+pub struct UserHttpHandler {
     user_usecase: Arc<dyn UserUsecase>,
 }
 
-impl UserHttpHandlerImpl {
-    pub const fn new(user_usecase: Arc<dyn UserUsecase>) -> UserHttpHandlerImpl {
-        UserHttpHandlerImpl { user_usecase }
+impl UserHttpHandler {
+    pub const fn new(user_usecase: Arc<dyn UserUsecase>) -> UserHttpHandler {
+        UserHttpHandler { user_usecase }
     }
-}
 
-#[async_trait]
-impl super::UserHttpHandler for UserHttpHandlerImpl {
-    async fn get_user(&self, uid: i32) -> Result<HttpResponse, Error> {
+    pub async fn get_user(&self, uid: i32) -> Result<HttpResponse, Error> {
         match self.user_usecase.get_by_id(uid).await {
-            Ok(user) => Ok(HttpResponse::Ok().json(user)),
-            Err(_) => Err(ErrorNotFound("User not found.")),
+            Some(user) => Ok(HttpResponse::Ok().json(user)),
+            None => Ok(HttpResponse::NotFound().json("User not found.")),
         }
     }
 
-    async fn hello(&self) -> Result<HttpResponse, Error> {
-        Ok(HttpResponse::Ok().body("Hello world"))
+    pub async fn create_user(&self, form: web::Json<Model>) -> Result<HttpResponse, Error> {
+        match self.user_usecase.create_user(form).await {
+            Some(_) => Ok(HttpResponse::Ok().finish()),
+            None => Ok(HttpResponse::NotAcceptable().json("Can't create user.")),
+        }
     }
+}
+
+#[get("/users/{user_id}")]
+async fn get_user(
+    data: web::Data<UserContainer>,
+    uid: web::Path<i32>,
+) -> Result<HttpResponse, Error> {
+    let delivery = &data.http_delivery;
+    delivery.get_user(*uid).await
+}
+
+#[post("/users")]
+async fn create_user(
+    data: web::Data<UserContainer>,
+    form: web::Json<Model>,
+) -> Result<HttpResponse, Error> {
+    let delivery = &data.http_delivery;
+    delivery.create_user(form).await
 }
