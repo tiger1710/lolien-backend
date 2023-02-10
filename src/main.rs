@@ -1,6 +1,8 @@
 use actix_web::{middleware, web::Data, App, HttpServer};
+use replay::ReplayContainer;
 use sea_orm::Database;
 use user::UserContainer;
+pub mod replay;
 pub mod user;
 
 #[actix_web::main]
@@ -15,12 +17,15 @@ async fn main() -> std::io::Result<()> {
         .expect("Can't connect to db.");
 
     let user_container = UserContainer::new_user_container(db.clone());
+    let replay_container = ReplayContainer::new_replay_container(db.clone());
 
     HttpServer::new(move || {
         App::new()
             .app_data(Data::new(user_container.clone()))
+            .app_data(Data::new(replay_container.clone()))
             .wrap(middleware::Logger::default())
             .configure(user::config)
+            .configure(replay::config)
     })
     .bind(("127.0.0.1", 8081))?
     .run()

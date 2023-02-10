@@ -15,7 +15,7 @@ impl UserRepositoryImpl {
 
 #[async_trait]
 impl super::UserRepository for UserRepositoryImpl {
-    async fn select_user_by_id(&self, uid: i32) -> Result<Option<Model>, DbErr> {
+    async fn select_user_by_id(&self, uid: i32) -> anyhow::Result<Option<Model>> {
         Ok(Entity::find_by_id(uid).one(&self.conn).await?)
     }
 

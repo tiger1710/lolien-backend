@@ -9,9 +9,16 @@ edition = "2021"
 dotenv = { version = "0" }
 log = {version = "0" }
 env_logger = { version = "0" }
+anyhow = { version = "1" }
+
 actix-web = { version = "4" }
+actix-multipart = { version = "0" }
+futures-util = { version = "0" }
+sanitize-filename = { version = "0" }
+
 serde = { version = "1", features = ["derive"] }
-# diesel = { version = "2", features = ["mysql", "r2d2"] }
+serde_json = { version = "1" }
 sea-orm = { version = "0", features = ["sqlx-mysql", "runtime-actix-native-tls", "macros"] }
 async-trait = "0"
+rofl-parser = "0"
 
