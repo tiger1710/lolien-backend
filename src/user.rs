@@ -17,14 +17,14 @@ use self::{
 
 #[async_trait]
 pub trait UserRepository: Send + Sync {
-    async fn select_user_by_id(&self, uid: i32) -> Result<Option<Model>, DbErr>;
+    async fn select_user_by_id(&self, uid: i32) -> anyhow::Result<Option<Model>>;
     async fn insert_user(&self, user: Model) -> Result<ActiveModel, DbErr>;
 }
 
 #[async_trait]
 pub trait UserUsecase: Send + Sync {
-    async fn get_by_id(&self, uid: i32) -> Option<Model>;
-    async fn create_user(&self, form: web::Json<Model>) -> Option<ActiveModel>;
+    async fn get_by_id(&self, uid: i32) -> anyhow::Result<Option<Model>>;
+    async fn create_user(&self, form: web::Json<Model>) -> anyhow::Result<ActiveModel>;
 }
 
 use sea_orm::DatabaseConnection;
@@ -37,11 +37,12 @@ pub struct UserContainer {
 
 impl UserContainer {
     pub fn new_user_container(conn: DatabaseConnection) -> UserContainer {
-        let http_delivery = UserHttpHandler::new(Arc::new(UserUsecaseImpl::new(Arc::new(
-            UserRepositoryImpl::new(conn),
-        ))));
-
-        UserContainer { http_delivery }
+        let user_repository = UserRepositoryImpl::new(conn);
+        let user_usecase = UserUsecaseImpl::new(Arc::new(user_repository));
+        let user_http_handler = UserHttpHandler::new(Arc::new(user_usecase));
+        UserContainer {
+            http_delivery: user_http_handler,
+        }
     }
 }
 
