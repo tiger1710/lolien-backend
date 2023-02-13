@@ -5,7 +5,7 @@ mod replay_domain;
 mod replay_repository;
 mod replay_usecase;
 
-use actix_web::web::{self, Bytes};
+use actix_web::web;
 use rofl_parser::rofl::rofl_json::RoflJson;
 
 use self::{
@@ -34,7 +34,9 @@ impl ReplayContainer {
         let replay_repository = ReplayRepositoryImpl::new(conn);
         let replay_usecase = ReplayUsecaseImpl::new(Arc::new(replay_repository));
         let replay_http_handler = ReplayHttpHandler::new(Arc::new(replay_usecase));
-        ReplayContainer { http_delivery: replay_http_handler }
+        ReplayContainer {
+            http_delivery: replay_http_handler,
+        }
     }
 }
 

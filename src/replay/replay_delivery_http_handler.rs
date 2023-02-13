@@ -1,9 +1,9 @@
-use std::{sync::Arc, io::Read};
+use std::sync::Arc;
 
 use actix_multipart::Multipart;
 use actix_web::{post, web, Error, HttpResponse};
 use futures_util::TryStreamExt;
-use sea_orm::prelude::Uuid;
+use uuid::Uuid;
 
 use crate::replay::ReplayContainer;
 
@@ -31,7 +31,10 @@ impl ReplayHttpHandler {
             log::info!("{file_name} uploaded.");
 
             let mut data: Vec<u8> = Vec::new();
-            data.append(field.try_collect().await?);
+            while let Some(bytes) = field.try_next().await? {
+                data.append(&mut bytes.to_vec());
+            }
+
             rofl_jsons.push(self.replay_usecase.get_json_from_rofl(&data).await?);
         }
 
@@ -45,5 +48,8 @@ async fn upload_replay(
     payload: Multipart,
 ) -> Result<HttpResponse, Error> {
     let delivery = &data.http_delivery;
-    Ok(delivery.upload_replay(payload).await.expect("Can't upload replay file"))
+    Ok(delivery
+        .upload_replay(payload)
+        .await
+        .expect("Can't upload replay file"))
 }

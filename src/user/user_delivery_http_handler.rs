@@ -44,5 +44,8 @@ async fn create_user(
     form: web::Json<Model>,
 ) -> Result<HttpResponse, Error> {
     let delivery = &data.http_delivery;
-    Ok(delivery.create_user(form).await.expect("Can't create user."))
+    Ok(delivery
+        .create_user(form)
+        .await
+        .expect("Can't create user."))
 }
