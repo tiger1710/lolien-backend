@@ -2,9 +2,9 @@ use std::sync::Arc;
 
 use actix_web::{get, post, web, Error, HttpResponse};
 
-use crate::user::UserContainer;
+use super::{UserContainer, UserUsecase};
 
-use super::{user_domain::Model, UserUsecase};
+use entity::user;
 
 #[derive(Clone)]
 pub struct UserHttpHandler {
@@ -23,7 +23,7 @@ impl UserHttpHandler {
         }
     }
 
-    pub async fn create_user(&self, form: web::Json<Model>) -> anyhow::Result<HttpResponse> {
+    pub async fn create_user(&self, form: web::Json<user::Model>) -> anyhow::Result<HttpResponse> {
         self.user_usecase.create_user(form).await?;
         Ok(HttpResponse::Ok().finish())
     }
@@ -41,7 +41,7 @@ async fn get_user(
 #[post("/users")]
 async fn create_user(
     data: web::Data<UserContainer>,
-    form: web::Json<Model>,
+    form: web::Json<user::Model>,
 ) -> Result<HttpResponse, Error> {
     let delivery = &data.http_delivery;
     Ok(delivery

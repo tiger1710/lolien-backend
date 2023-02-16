@@ -1,7 +1,6 @@
 use async_trait::async_trait;
 
 mod replay_delivery_http_handler;
-mod replay_domain;
 mod replay_repository;
 mod replay_usecase;
 
@@ -30,7 +29,7 @@ pub struct ReplayContainer {
 }
 
 impl ReplayContainer {
-    pub fn new_replay_container(conn: DatabaseConnection) -> ReplayContainer {
+    pub fn new(conn: DatabaseConnection) -> ReplayContainer {
         let replay_repository = ReplayRepositoryImpl::new(conn);
         let replay_usecase = ReplayUsecaseImpl::new(Arc::new(replay_repository));
         let replay_http_handler = ReplayHttpHandler::new(Arc::new(replay_usecase));

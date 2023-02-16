@@ -1,24 +1,22 @@
 use async_trait::async_trait;
 
 mod user_delivery_http_handler;
-mod user_domain;
 mod user_repository;
 mod user_usecase;
 
+use entity::user::{ActiveModel, Model};
+
 use actix_web::web;
-use sea_orm::DbErr;
 
 use self::{
-    user_delivery_http_handler::UserHttpHandler,
-    user_domain::{ActiveModel, Model},
-    user_repository::UserRepositoryImpl,
+    user_delivery_http_handler::UserHttpHandler, user_repository::UserRepositoryImpl,
     user_usecase::UserUsecaseImpl,
 };
 
 #[async_trait]
 pub trait UserRepository: Send + Sync {
     async fn select_user_by_id(&self, uid: i32) -> anyhow::Result<Option<Model>>;
-    async fn insert_user(&self, user: Model) -> Result<ActiveModel, DbErr>;
+    async fn insert_user(&self, user: Model) -> anyhow::Result<ActiveModel>;
 }
 
 #[async_trait]
@@ -36,7 +34,7 @@ pub struct UserContainer {
 }
 
 impl UserContainer {
-    pub fn new_user_container(conn: DatabaseConnection) -> UserContainer {
+    pub fn new(conn: DatabaseConnection) -> UserContainer {
         let user_repository = UserRepositoryImpl::new(conn);
         let user_usecase = UserUsecaseImpl::new(Arc::new(user_repository));
         let user_http_handler = UserHttpHandler::new(Arc::new(user_usecase));

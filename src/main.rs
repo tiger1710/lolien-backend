@@ -16,8 +16,8 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Can't connect to db.");
 
-    let user_container = UserContainer::new_user_container(db.clone());
-    let replay_container = ReplayContainer::new_replay_container(db.clone());
+    let user_container = UserContainer::new(db.clone());
+    let replay_container = ReplayContainer::new(db.clone());
 
     HttpServer::new(move || {
         App::new()
