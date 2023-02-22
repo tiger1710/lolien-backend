@@ -2,8 +2,9 @@ use actix_web::{middleware, web::Data, App, HttpServer};
 use replay::ReplayContainer;
 use sea_orm::Database;
 use user::UserContainer;
-pub mod replay;
-pub mod user;
+
+mod replay;
+mod user;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -16,8 +17,8 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Can't connect to db.");
 
-    let user_container = UserContainer::new_user_container(db.clone());
-    let replay_container = ReplayContainer::new_replay_container(db.clone());
+    let user_container = UserContainer::new(db.clone());
+    let replay_container = ReplayContainer::new(db.clone());
 
     HttpServer::new(move || {
         App::new()
