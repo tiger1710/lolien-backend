@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use super::ReplayRepository;
-use anyhow::Ok;
+use super::{ReplayRepository, Match};
 use async_trait::async_trait;
+use entity::{match_info, participant};
 use rofl_parser::rofl::{self, rofl_json::RoflJson};
 
 pub struct ReplayUsecaseImpl {
@@ -26,5 +26,32 @@ impl super::ReplayUsecase for ReplayUsecaseImpl {
         } else {
             Err(anyhow::anyhow!("rofl json is none."))
         }
+    }
+
+    async fn create_match_info(&self, file_name: &str) -> anyhow::Result<()> {
+        // parse file name
+        let pos = file_name.find(".rofl").unwrap_or(0);
+        let match_id = &file_name[..pos];
+        let match_id = match_id.replace('-', "_");
+
+        let res = riot_api::get_match_info(&match_id).await?;
+
+        let match_info = match_info::ActiveModel::from(&res);
+        let match_id = res.metadata.matchId.as_str();
+
+        let participants = res
+            .info
+            .participants
+            .iter()
+            .map(|p| participant::ActiveModel::from((match_id, p)))
+            .collect();
+
+        // insert match_info & participants
+        self.replay_repository.insert_match_info(match_info).await?;
+        self.replay_repository
+            .insert_many_participants(participants)
+            .await?;
+
+        Ok(())
     }
 }

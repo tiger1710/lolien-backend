@@ -22,13 +22,15 @@ impl ReplayHttpHandler {
     pub async fn upload_replay(&self, mut payload: Multipart) -> anyhow::Result<HttpResponse> {
         let mut rofl_jsons = Vec::new();
 
-        while let Some(mut field) = payload.try_next().await? {
+        if let Some(mut field) = payload.try_next().await? {
             let file_name = field
                 .content_disposition()
                 .get_filename()
                 .map_or_else(|| Uuid::new_v4().to_string(), sanitize_filename::sanitize);
 
             log::info!("{file_name} uploaded.");
+
+            self.replay_usecase.create_match_info(&file_name).await?;
 
             let mut data: Vec<u8> = Vec::new();
             while let Some(bytes) = field.try_next().await? {
